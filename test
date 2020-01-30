@@ -1,0 +1,88 @@
+import React, { useState, useEffect } from 'react';
+import { Formik, Field } from "formik";
+import axios from 'axios';
+
+const App: React.FC = () => {
+
+    const [initialValues, setInitialValues] = useState();
+
+    async function getInitialValues() {
+        try {
+            const response = await axios.get('http://localhost:53132/api/Opco');
+            //console.log(response);
+
+            return {
+                Division_Id: response.data[0].Divison_Id,
+                Year: response.data[0].Year,
+                Cost: response.data[0].Cost
+            }
+
+        } catch (error) {
+            console.error(error);
+        }
+    }
+
+    useEffect(() => {
+        getInitialValues().then(res => setInitialValues(res))
+    });
+
+    const handleOnSubmit = (values: any, actions: { setSubmitting: (arg0: boolean) => void; resetForm: () => void; }) => {
+
+        //console.log(values);
+
+        axios({
+            method: "POST",
+            headers: { 'content-type': 'application/json' },
+            url: "http://localhost:53132/api/Projects",
+            data: values
+        })
+            .then((response: any) => {
+                actions.setSubmitting(false);
+                actions.resetForm();
+
+            })
+            .catch((error: any) => {
+                actions.setSubmitting(false);
+
+            });
+
+    };
+
+    return (
+
+        <>
+            <Formik initialValues={initialValues}
+                onSubmit={handleOnSubmit}
+                render={({ handleSubmit }) =>
+                    (
+                        <form onSubmit={handleSubmit}>
+
+                            <label htmlFor="Division_Id">
+                                <div>Division</div>
+                                <Field name="Division_Id" component="select">
+                                    <option value="2">A</option>
+                                    <option value="4">B</option>
+                                    <option value="7">C</option>
+                                </Field>
+                            </label>
+
+                            <label htmlFor="Year">
+                                <div>Year</div>
+                                <Field type="text" name="Year" value="{state.Year}" />
+                            </label>
+
+                            <label htmlFor="Cost">
+                                <div>Cost</div>
+                                <Field type="text" name="Cost" value="{state.Cost}" />
+                            </label>
+
+                            <button type="submit">Submit</button>
+                        </form>
+                    )}>
+            </Formik>
+        </>
+
+    );
+}
+
+export default App;
